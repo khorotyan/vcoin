@@ -1,26 +1,23 @@
-import * as cryptoJs from "crypto-js";
-
-const { SHA256 } = cryptoJs;
+import { Transaction } from "../wallet";
+import { SHA256 } from "crypto-js";
 
 export default class Block {
-  index: number;
   timestamp: Date;
-  data: any;
+  transactions: Transaction[];
   hash: string;
   previousHash: string;
   nonce: number;
 
-  constructor(index: number, timestamp: Date, data: any, previousHash = "") {
-    this.index = index;
+  constructor(timestamp: Date, transactions: Transaction[], previousHash = "") {
     this.timestamp = timestamp;
-    this.data = data;
+    this.transactions = transactions;
     this.previousHash = previousHash;
     this.hash = this.calculateHash();
     this.nonce = 0;
   }
 
   calculateHash(): string {
-    return SHA256(this.index + this.nonce + this.previousHash + this.timestamp + JSON.stringify(this.data)).toString();
+    return SHA256(this.nonce + this.previousHash + this.timestamp + JSON.stringify(this.transactions)).toString();
   }
 
   mineNewBlock(difficulty: number) {
