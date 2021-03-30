@@ -1,50 +1,33 @@
 import { Block, Blockchain } from "./blockchain";
 import { Transaction } from "./wallet";
+import * as elliptic from "elliptic";
 
-let vCoin = new Blockchain();
-const addresses = ["add1", "add2", "add3", "newAdd"]
+const ec = new elliptic.ec("secp256k1");
 
-// Create transactions
-vCoin.createTransaction(new Transaction(addresses[0], addresses[1], 10));
-vCoin.createTransaction(new Transaction(addresses[1], addresses[2], 4));
+const myKeyPair = ec.genKeyPair();
+const otherKeyPair = ec.genKeyPair();
 
-// Mine
+
+
+const privateKey1 = myKeyPair.getPrivate("hex");
+const privateKey2 = otherKeyPair.getPrivate("hex");
+
+const myKey = ec.keyFromPrivate(privateKey1);
+const otherKey = ec.keyFromPrivate(privateKey2);
+
+const myWalletAddress = myKey.getPublic("hex");
+const otherAddress = otherKey.getPublic("hex");
+
+
+
+const vCoin = new Blockchain();
+
+const transaction = new Transaction(myWalletAddress, otherAddress, 3);
+transaction.signTransaction(myKey);
+vCoin.addTransaction(transaction);
+
 console.log("Starting mining.");
-vCoin.minePendingTransactions(addresses[3]);
+vCoin.minePendingTransactions(myWalletAddress);
 
-// Display account balances
-for (let i = 0; i < addresses.length; i++) {
-  console.log(`Balance of ${addresses[i]}: ${vCoin.getAddressBalance(addresses[i])}`);
-
-  /*
-    Prints:
-
-    Balance of add1: -10
-    Balance of add2: 6
-    Balance of add3: 4
-    Balance of newAdd: 0
-  */
-}
-
-
-
-// Create transactions
-vCoin.createTransaction(new Transaction(addresses[2], addresses[0], 2));
-
-// Mine
-console.log("Starting mining.");
-vCoin.minePendingTransactions("newAdd");
-
-// Display account balances
-for (let i = 0; i < addresses.length; i++) {
-  console.log(`Balance of ${addresses[i]}: ${vCoin.getAddressBalance(addresses[i])}`);
-
-  /*
-    Prints:
-    
-    Balance of add1: -8
-    Balance of add2: 6
-    Balance of add3: 2
-    Balance of newAdd: 1
-  */
-}
+console.log(`My balance: ${vCoin.getAddressBalance(myWalletAddress)}`); // My balance: -2
+console.log(`Other user balance: ${vCoin.getAddressBalance(otherAddress)}`); // Other user balance: 3

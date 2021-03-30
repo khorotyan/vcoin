@@ -10,7 +10,7 @@ export default class Blockchain {
   constructor() {
     this.blocks = [this.createGenesisBlock()];
     this.pendingTransactions = [];
-    this.difficulty = 5;
+    this.difficulty = 4;
     this.miningReward = 1;
   }
 
@@ -23,17 +23,26 @@ export default class Blockchain {
   }
 
   minePendingTransactions(rewardAddress: string): void {
-    let block = new Block(new Date(), this.pendingTransactions);
+    const rewardTransaction = new Transaction(null, rewardAddress, this.miningReward);
+    this.pendingTransactions.push(rewardTransaction);
+
+    const block = new Block(new Date(), this.pendingTransactions, this.getLastBlock().hash);
     block.mineNewBlock(this.difficulty);
 
     this.blocks.push(block);
 
-    this.pendingTransactions = [
-      new Transaction(null, rewardAddress, this.miningReward)
-    ];
+    this.pendingTransactions = [];
   }
 
-  createTransaction(transaction: Transaction) {
+  addTransaction(transaction: Transaction) {
+    if (!transaction.fromAddress || !transaction.toAddress) {
+      throw new Error("From and To addresses are required.");
+    }
+
+    if (!transaction.isValid()) {
+      throw new Error("Invalid transaction.")
+    }
+
     this.pendingTransactions.push(transaction);
   }
 
@@ -55,10 +64,15 @@ export default class Blockchain {
     return balance;
   }
 
-  chainValid(): boolean {
+  isChainValid(): boolean {
     for (let i = 1; i < this.blocks.length; i++) {
       const currentBlock = this.blocks[i];
       const previousBlock = this.blocks[i - 1];
+
+      // Check if current block transactions are valid
+      if (!currentBlock.hasValidTransactions()) {
+        return false;
+      }
 
       // Check if current block hash is calculated correctly
       if (currentBlock.hash !== currentBlock.calculateHash()) {
