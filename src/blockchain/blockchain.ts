@@ -27,8 +27,12 @@ export default class Blockchain {
     this.pendingTransactions.push(rewardTransaction);
 
     const block = new Block(new Date(), this.pendingTransactions, this.getLastBlock().hash);
-    block.mineNewBlock(this.difficulty);
 
+    if (!this.isChainValid()) {
+      throw new Error("The chain is invalid.");
+    }
+
+    block.mineNewBlock(this.difficulty);
     this.blocks.push(block);
 
     this.pendingTransactions = [];
@@ -40,7 +44,15 @@ export default class Blockchain {
     }
 
     if (!transaction.isValid()) {
-      throw new Error("Invalid transaction.")
+      throw new Error("Invalid transaction.");
+    }
+
+    if (transaction.amount <= 0) {
+      throw new Error("Transaction amount must be greater than 0.");
+    }
+
+    if (this.getAddressBalance(transaction.fromAddress) < transaction.amount) {
+      throw new Error("Insufficient balance.");
     }
 
     this.pendingTransactions.push(transaction);
@@ -65,6 +77,13 @@ export default class Blockchain {
   }
 
   isChainValid(): boolean {
+    // Check genesis block validity
+    const genesisCopy = this.createGenesisBlock();
+    if (genesisCopy.transactions.length != this.blocks[0].transactions.length ||
+      genesisCopy.previousHash != this.blocks[0].previousHash) {
+        return false;
+    }
+
     for (let i = 1; i < this.blocks.length; i++) {
       const currentBlock = this.blocks[i];
       const previousBlock = this.blocks[i - 1];
@@ -82,8 +101,8 @@ export default class Blockchain {
       if (currentBlock.previousHash !== previousBlock.hash) {
         return false;
       }
-
-      return true;
     }
+
+    return true;
   }
 }

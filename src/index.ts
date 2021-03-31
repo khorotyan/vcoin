@@ -1,4 +1,4 @@
-import { Block, Blockchain } from "./blockchain";
+import { Blockchain } from "./blockchain";
 import { Transaction } from "./wallet";
 import * as elliptic from "elliptic";
 
@@ -21,13 +21,14 @@ const otherAddress = otherKey.getPublic("hex");
 
 
 const vCoin = new Blockchain();
+vCoin.minePendingTransactions(myWalletAddress);
 
-const transaction = new Transaction(myWalletAddress, otherAddress, 3);
+const transaction = new Transaction(myWalletAddress, otherAddress, 0.05);
 transaction.signTransaction(myKey);
 vCoin.addTransaction(transaction);
 
 console.log("Starting mining.");
 vCoin.minePendingTransactions(myWalletAddress);
 
-console.log(`My balance: ${vCoin.getAddressBalance(myWalletAddress)}`); // My balance: -2
-console.log(`Other user balance: ${vCoin.getAddressBalance(otherAddress)}`); // Other user balance: 3
+console.log(`My balance: ${vCoin.getAddressBalance(myWalletAddress)}`); // My balance: 1.95
+console.log(`Other user balance: ${vCoin.getAddressBalance(otherAddress)}`); // Other user balance: 0.05

@@ -8,16 +8,18 @@ export default class Transaction {
   toAddress: string;
   amount: number;
   signature: string;
+  timestamp: Date;
 
   constructor(fromAddress: string, toAddress: string, amount: number) {
     this.fromAddress = fromAddress;
     this.toAddress = toAddress;
     this.amount = amount;
+    this.timestamp = new Date();
   }
 
   // Return Sha256 hash of the transaction
   calculateHash() {
-    return SHA256(this.fromAddress + this.fromAddress + this.fromAddress).toString();
+    return SHA256(this.fromAddress + this.fromAddress + this.fromAddress + this.timestamp).toString();
   }
 
   signTransaction(signingKey: elliptic.ec.KeyPair) {
